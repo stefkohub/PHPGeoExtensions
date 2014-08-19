@@ -20,10 +20,10 @@ KMterm  term(100, 0, 0, 0,              // run for 100 stages
 
 // Private helper functions
 
-clusterPoint getCenterPoint(KMdataArray pts, int npts) {
+clusterPoint getCenterPoint(KMdataArray pts, int pointNum) {
   clusterPoint thecenter;
-  int pointNum = npts;
-  for (int i=0; i++; i<pointNum) {
+  // int pointNum = npts;
+  for (int i=0;i<pointNum; i++) {
     thecenter.lat+=pts[i][0];
     thecenter.lng+=pts[i][1];
   }
