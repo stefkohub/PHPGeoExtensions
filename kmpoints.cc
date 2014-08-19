@@ -65,29 +65,29 @@ double cross(const clusterPoint &O, const clusterPoint &A, const clusterPoint &B
 {
 	return (A.lat - O.lat) * (B.lng - O.lng) - (A.lng - O.lng) * (B.lat - O.lat);
 }
- 
+
 // Returns a list of points on the convex hull in counter-clockwise order.
 // Note: the last point in the returned list is the same as the first one.
 vector<clusterPoint> convex_hull(vector<clusterPoint> P)
 {
 	int n = P.size(), k = 0;
 	vector<clusterPoint> H(2*n);
- 
+
 	// Sort points lexicographically
 	sort(P.begin(), P.end());
- 
+
 	// Build lower hull
 	for (int i = 0; i < n; ++i) {
 		while (k >= 2 && cross(H[k-2], H[k-1], P[i]) <= 0) k--;
 		H[k++] = P[i];
 	}
- 
+
 	// Build upper hull
 	for (int i = n-2, t = k+1; i >= 0; i--) {
 		while (k >= t && cross(H[k-2], H[k-1], P[i]) <= 0) k--;
 		H[k++] = P[i];
 	}
- 
+
 	H.resize(k);
 	return H;
 }
@@ -103,7 +103,7 @@ static inline double equirectangularApproxDist(KMpoint pa, KMpoint pb)
 
     double x = b[1]-a[1]*cos((a[0]+b[0])/2);
     double y = b[0]-a[0];
-    // returning square distance 
+    // returning square distance
     double dist=R2*((x*x)+(y*y));
     if (dist<RESOLUTION)
       return 0.0;
@@ -145,8 +145,8 @@ static inline double cosinesLaw(clusterPoint a, clusterPoint b)
 kmpoints::kmpoints(int maxPoints) {
   // KMdata dataPts(dim, nPts);
   this->theDim=2;
-  this->maxPoints=5000;
-  term.setAbsMaxTotStage(200); 
+  this->maxPoints=maxPoints;
+  term.setAbsMaxTotStage(200);
   // KMdata dp(this->theDim, this->maxPoints);
   this->dataPts = new KMdata(this->theDim, this->maxPoints);
   this->dataPtsID = (int*)calloc(this->maxPoints, sizeof(int));
@@ -242,7 +242,7 @@ vector <clusterPoint> kmpoints::getPolygon() {
 
   vector <clusterPoint> cPoints(vectorPoint((this->dataPts)->getNPts()));
 
-  vectorPoint innerPoints; 
+  vectorPoint innerPoints;
   for (int i = 0; i < (this->dataPts)->getNPts(); i++) {
     clusterPoint cpoint;
     cpoint.lat=dp[i][0];
@@ -264,7 +264,7 @@ vector <clusterPoint> kmpoints::getPolygon() {
 
 circlePoint kmpoints::getCircle() {
   //vector <clusterPoint> cPoints;
-  
+
   list<vector<KMcoord> > lp;
   // define the types of iterators through the points and their coordinates
   // ----------------------------------------------------------------------
@@ -276,7 +276,7 @@ circlePoint kmpoints::getCircle() {
   typedef Miniball::
     Miniball <Miniball::CoordAccessor<PointIterator, CoordIterator> >
     MB;
- 
+
   KMdataArray dp = (this->dataPts)->getPts();
   for (int i=0;i<this->getNumPts();i++) {
     vector <KMcoord> p(2);
@@ -284,16 +284,16 @@ circlePoint kmpoints::getCircle() {
     p[1]=dp[i][1];
     lp.push_back(p);
   }
-  
+
   MB mb (2, lp.begin(), lp.end());
-  
+
   const KMcoord *Ccenter = mb.center();
   circlePoint retVal;
   retVal.lat=Ccenter[0];
   retVal.lng=Ccenter[1];
   retVal.radius=sqrt(mb.squared_radius());
   if (retVal.radius<RESOLUTION) retVal.radius=0;
-  
+
   return retVal;
 }
 
@@ -309,7 +309,7 @@ int kmpoints::getNumIntersects(double lat, double lng, double criteria) {
 
   double dist;
   for (int i=0;i<this->getNumPts();i++) {
-    if (cosinesLaw(dp[i],thePoint)<=criteria) 
+    if (cosinesLaw(dp[i],thePoint)<=criteria)
       nIntersects++;
   }
   return nIntersects;
@@ -336,7 +336,7 @@ int kmpoints::getNumIntersectsv2(double lat, double lng, double criteria) {
   for (int i=0;i<this->getNumPts();i++) {
     // calcolo la distanza euclidea di tutti i punti in dp dal punto specificato
     // se la distanza rispetta il criterio specificato, faccio +1
-    if (cosinesLaw(innerPoints[i],center)<=criteria) 
+    if (cosinesLaw(innerPoints[i],center)<=criteria)
       nIntersects++;
     //else
     //  break;
@@ -356,7 +356,7 @@ vector <int> kmpoints::getIdIntersects(double lat, double lng, double criteria) 
 
   double dist;
   for (int i=0;i<this->getNumPts();i++) {
-    if (cosinesLaw(dp[i],thePoint)<=criteria) 
+    if (cosinesLaw(dp[i],thePoint)<=criteria)
       theIntersects.push_back(this->dataPtsID[i]);
   }
   return theIntersects;
