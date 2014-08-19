@@ -11,7 +11,7 @@ I renamed kmlocal-1.7.2 directory to kmlocal to overcome some parsing issues in 
 Example Usage in PHP
 ====================
 
-Initialize kmponts class that will use maximum 1000 points:
+Initialize kmpoints class that will use maximum 1000 points:
 
 ```PHP
 $k = new kmpoints(1000);
