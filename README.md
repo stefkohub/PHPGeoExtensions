@@ -19,26 +19,26 @@ $k = new kmpoints(1000);
 
 Add some datapoints with latitude, longitude, and an optional numerical identifier:
 
-```
+```PHP
 $k->newPoint(41.9100711,12.5359979,1);
 $k->newPoint(41.7872566,12.243663,2);
 ```
 
 Get the minimum circle containing those points:
 
-```
+```PHP
 print_r($k->getCircle());
 ```
 
 Get the polygon (convex hull):
 
-```
+```PHP
 print_r($k->getPolygon());
 ```
 
 Get an array of convex hull obtained from a first kmeans clustering pass:
 
-```
+```PHP
 $theKparameter=1;
 print_r($k->getPolygons($theKparameter));
 ```
