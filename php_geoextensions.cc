@@ -16,7 +16,7 @@ struct kmpoints_object {
 void kmpoints_free_storage(void *object TSRMLS_DC)
 {
     kmpoints_object *obj = (kmpoints_object *)object;
-    delete obj->kmpoint; 
+    delete obj->kmpoint;
 
     zend_hash_destroy(obj->std.properties);
     FREE_HASHTABLE(obj->std.properties);
@@ -26,7 +26,6 @@ void kmpoints_free_storage(void *object TSRMLS_DC)
 
 zend_object_value kmpoints_create_handler(zend_class_entry *type TSRMLS_DC)
 {
-    zval *tmp;
     zend_object_value retval;
 
     kmpoints_object *obj = (kmpoints_object *)emalloc(sizeof(kmpoints_object));
@@ -34,9 +33,17 @@ zend_object_value kmpoints_create_handler(zend_class_entry *type TSRMLS_DC)
     obj->std.ce = type;
 
     ALLOC_HASHTABLE(obj->std.properties);
+
     zend_hash_init(obj->std.properties, 0, NULL, ZVAL_PTR_DTOR, 0);
+    //zend_hash_copy(obj->std.properties, &type->default_properties,
+    //    (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+#if PHP_VERSION_ID < 50399
     zend_hash_copy(obj->std.properties, &type->default_properties,
         (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+#else
+    object_properties_init((zend_object*) &(obj->std), type);
+#endif
+
 
     retval.handle = zend_objects_store_put(obj, NULL, kmpoints_free_storage, NULL TSRMLS_CC);
     retval.handlers = &kmpoints_object_handlers;
@@ -50,7 +57,7 @@ PHP_METHOD(kmpoints, __construct)
     kmpoints *kmp = NULL;
     zval *object = getThis();
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &maxp) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"l", &maxp) == FAILURE) {
         RETURN_NULL();
     }
 
@@ -67,7 +74,7 @@ PHP_METHOD(kmpoints, getLng)
     kmpoints_object *obj = (kmpoints_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
     kmp = obj->kmpoint;
     if (kmp != NULL) {
-      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &theIndex) == FAILURE) {
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"l", &theIndex) == FAILURE) {
         RETURN_NULL();
       }
       // php_printf("Index: %d\n",(int)kmp->getLng((int)theIndex));
@@ -84,7 +91,7 @@ PHP_METHOD(kmpoints, getLat)
     kmpoints_object *obj = (kmpoints_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
     kmp = obj->kmpoint;
     if (kmp != NULL) {
-      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &theIndex) == FAILURE) {
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"l", &theIndex) == FAILURE) {
         RETURN_NULL();
       }
       RETURN_DOUBLE((kmp->getLat((int)theIndex)));
@@ -100,9 +107,9 @@ PHP_METHOD(kmpoints, newPoint)
   kmpoints *kmp;
   kmpoints_object *obj = (kmpoints_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
   kmp = obj->kmpoint;
-  
+
   if (kmp != NULL) {
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "dd|d", &lat, &lng, &uid) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"dd|d", &lat, &lng, &uid) == FAILURE) {
       RETURN_NULL();
     }
     //php_printf("lat, lng: %f, %f\n",lat,lng);
@@ -113,7 +120,7 @@ PHP_METHOD(kmpoints, newPoint)
     }
     RETURN_NULL();
   }
-  
+
 }
 
 PHP_METHOD(kmpoints, getPolygons)
@@ -129,7 +136,7 @@ PHP_METHOD(kmpoints, getPolygons)
 
   if (kmp != NULL) {
 
-      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &nCenter) == FAILURE) {
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"l", &nCenter) == FAILURE) {
           RETURN_NULL();
       }
 
@@ -155,7 +162,7 @@ PHP_METHOD(kmpoints, getPolygons)
       }
 
   }
-  
+
 }
 
 PHP_METHOD(kmpoints, getPolygon)
@@ -186,7 +193,7 @@ PHP_METHOD(kmpoints, getPolygon)
 	//add_assoc_zval(return_value, "hull", theHull);
 
   }
-  
+
 }
 
 PHP_METHOD(kmpoints, getCircle)
@@ -214,7 +221,7 @@ PHP_METHOD(kmpoints, getCircle)
 	add_assoc_zval(return_value, "radius", theRadius);
 
   }
-  
+
 }
 
 PHP_METHOD(kmpoints, getNumPts)
@@ -253,16 +260,16 @@ PHP_METHOD(kmpoints, getNumIntersects)
 
   if (kmp != NULL) {
 
-      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ddd", &lat, &lng, &radius) == FAILURE) {
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"ddd", &lat, &lng, &radius) == FAILURE) {
           RETURN_NULL();
       }
 
       retval = kmp->getNumIntersects(lat, lng, radius);
-   
+
       RETURN_LONG(retval);
 
   }
-  
+
 }
 
 PHP_METHOD(kmpoints, getIdIntersects)
@@ -277,7 +284,7 @@ PHP_METHOD(kmpoints, getIdIntersects)
 
   if (kmp != NULL) {
 
-      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ddd", &lat, &lng, &radius) == FAILURE) {
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"ddd", &lat, &lng, &radius) == FAILURE) {
           RETURN_NULL();
       }
 
@@ -289,10 +296,14 @@ PHP_METHOD(kmpoints, getIdIntersects)
       }
 
   }
-  
+
 }
 
+#if PHP_VERSION_ID < 50399
 function_entry kmpoints_methods[] = {
+#else
+zend_function_entry kmpoints_methods[] = {
+#endif
     PHP_ME(kmpoints,  __construct,     		NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_ME(kmpoints,  getLng,      		NULL, ZEND_ACC_PUBLIC)
     PHP_ME(kmpoints,  getLat,           	NULL, ZEND_ACC_PUBLIC)

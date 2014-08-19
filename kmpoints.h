@@ -8,7 +8,7 @@
 #define PHP_CLUSTERPOINTS_RES_NAME "kmpoints::clusterPoints"
 
 typedef struct _clusterPoint{
-  int idp; 
+  int idp;
   KMcoord lat;
   KMcoord lng;
   bool operator <(const _clusterPoint &p) const {
@@ -41,8 +41,8 @@ public:
     int getNumIntersectsv2(double, double, double);
     vector <int> getIdIntersects(double, double, double);
 private:
-    KMcoord lat;
-    KMcoord lng;
+    //KMcoord lat;
+    //KMcoord lng;
     int nPts;
     KMdata *dataPts;
     int *dataPtsID;

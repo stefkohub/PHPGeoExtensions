@@ -307,7 +307,6 @@ int kmpoints::getNumIntersects(double lat, double lng, double criteria) {
 
   criteria*=criteria;
 
-  double dist;
   for (int i=0;i<this->getNumPts();i++) {
     if (cosinesLaw(dp[i],thePoint)<=criteria)
       nIntersects++;
@@ -354,7 +353,6 @@ vector <int> kmpoints::getIdIntersects(double lat, double lng, double criteria) 
 
   criteria*=criteria;
 
-  double dist;
   for (int i=0;i<this->getNumPts();i++) {
     if (cosinesLaw(dp[i],thePoint)<=criteria)
       theIntersects.push_back(this->dataPtsID[i]);
