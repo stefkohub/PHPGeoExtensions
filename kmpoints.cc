@@ -103,9 +103,8 @@ static inline double equirectangularApproxDist(KMpoint pa, KMpoint pb)
 
     double x = b[1]-a[1]*cos((a[0]+b[0])/2);
     double y = b[0]-a[0];
-    // return R*sqrt((x*x)+(y*y));
+    // returning square distance 
     double dist=R2*((x*x)+(y*y));
-    //printf("La d^2 tra %f,%f e %f,%f è: %f\n",a[0],a[1],b[0],b[1],dist);
     if (dist<RESOLUTION)
       return 0.0;
     else
@@ -113,6 +112,7 @@ static inline double equirectangularApproxDist(KMpoint pa, KMpoint pb)
 
 }
 
+// LINEAR VERSION
 static inline double cosinesLaw(KMpoint a, KMpoint b)
 {
     double d1, d2;
@@ -126,6 +126,7 @@ static inline double cosinesLaw(KMpoint a, KMpoint b)
     return d1 > d2 ? d1 : d2;
 }
 
+// LINEAR VERSION
 static inline double cosinesLaw(clusterPoint a, clusterPoint b)
 {
     double d1, d2;
@@ -287,14 +288,10 @@ circlePoint kmpoints::getCircle() {
   MB mb (2, lp.begin(), lp.end());
   
   const KMcoord *Ccenter = mb.center();
-  *kmOut << Ccenter[0] <<", " << Ccenter[1] <<endl;
-    //for(int i=0; i<2; ++i, ++Ccenter)
-    //  *kmOut << *Ccenter << " ";
-    //*kmOut << std::endl;
   circlePoint retVal;
   retVal.lat=Ccenter[0];
   retVal.lng=Ccenter[1];
-  retVal.radius=pow(mb.squared_radius(),2);
+  retVal.radius=sqrt(mb.squared_radius());
   if (retVal.radius<RESOLUTION) retVal.radius=0;
   
   return retVal;
