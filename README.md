@@ -13,7 +13,7 @@ Example Usage in PHP
 
 Initialize kmponts class that will use maximum 1000 points:
 
-```
+```PHP
 $k = new kmpoints(1000);
 ```
 
