@@ -113,6 +113,18 @@ static inline double equirectangularApproxDist(KMpoint pa, KMpoint pb)
 }
 
 // LINEAR VERSION
+static inline double cosinesLaw(double alat, double alng, double blat, double blng)
+{
+    double d1, d2;
+    d1=(alat - blat)/180.0*PI*R;
+    if (d1<0.0)
+      d1=-d1;
+    d2=(alng - blng)/180.0*PI*R; 
+    if (d2<0.0)
+      d2=-d2;
+    return d1 > d2 ? d1 : d2;
+}
+
 static inline double cosinesLaw(KMpoint a, KMpoint b)
 {
     double d1, d2;
@@ -299,46 +311,13 @@ circlePoint kmpoints::getCircle() {
 
 int kmpoints::getNumIntersects(double lat, double lng, double criteria) {
   KMdataArray dp = (this->dataPts)->getPts();
-  KMpoint thePoint = kmAllocPt(2);
   int nIntersects=0;
-
-  thePoint[0]=(KMcoord)lat;
-  thePoint[1]=(KMcoord)lng;
 
   criteria*=criteria;
 
   for (int i=0;i<this->getNumPts();i++) {
-    if (cosinesLaw(dp[i],thePoint)<=criteria)
+    if (cosinesLaw(dp[i][0],dp[i][1],lat,lng)<=criteria)
       nIntersects++;
-  }
-  return nIntersects;
-}
-
-int kmpoints::getNumIntersectsv2(double lat, double lng, double criteria) {
-  // (R0-R1)^2 <= (x0-x1)^2+(y0-y1)^2 <= (R0+R1)^2
-  KMdataArray dp = (this->dataPts)->getPts();
-  vector <clusterPoint> cPoints(vectorPoint((this->dataPts)->getNPts()));
-  vectorPoint innerPoints;
-  int nIntersects=0;
-
-  center.lat=lat;
-  center.lng=lng;
-
-  for (int i = 0; i < (this->dataPts)->getNPts(); i++) {
-    clusterPoint cpoint;
-    cpoint.lat=dp[i][0];
-    cpoint.lng=dp[i][1];
-    innerPoints.push_back(cpoint);
-  }
-  // std::sort(innerPoints.begin(), innerPoints.end(), coordinateOrder);
-
-  for (int i=0;i<this->getNumPts();i++) {
-    // calcolo la distanza euclidea di tutti i punti in dp dal punto specificato
-    // se la distanza rispetta il criterio specificato, faccio +1
-    if (cosinesLaw(innerPoints[i],center)<=criteria)
-      nIntersects++;
-    //else
-    //  break;
   }
   return nIntersects;
 }

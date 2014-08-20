@@ -327,7 +327,7 @@ PHP_MINIT_FUNCTION(phpgeoextensions)
         zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     kmpoints_object_handlers.clone_obj = NULL;
 
-    le_clusterPoints = zend_register_list_destructors_ex(NULL, NULL, PHP_CLUSTERPOINTS_RES_NAME, module_number);
+    le_clusterPoints = zend_register_list_destructors_ex(NULL, NULL, (char*)PHP_CLUSTERPOINTS_RES_NAME, module_number);
 
     return SUCCESS;
 }
