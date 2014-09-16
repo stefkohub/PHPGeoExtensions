@@ -33,6 +33,7 @@ public:
     KMcoord getLat(int);
     KMcoord getLng(int);
     vector < vectorPoint > getPolygons(int);
+    vector < vectorPoint > getClusters(int);
     vector <clusterPoint> getPolygon();
     circlePoint getCircle();
     int getNumPts();

@@ -248,6 +248,46 @@ vector < vectorPoint > kmpoints::getPolygons(int k) {
 
 }
 
+vector < vectorPoint > kmpoints::getClusters(int k) {
+  KMdataArray dp = (this->dataPts)->getPts();
+
+  (this->dataPts)->buildKcTree();
+  KMfilterCenters ctrs(k, *(this->dataPts));
+
+  // KMlocalLloyds       kmAlg(ctrs, term);
+  // ctrs = kmAlg.execute();
+  KMlocalHybrid Local_Hybrid(ctrs, term);   // EZ-Hybrid heuristic
+  ctrs = Local_Hybrid.execute();
+
+  KMctrIdxArray closeCtr = new KMctrIdx[(this->dataPts)->getNPts()];
+  double* sqDist = new double[(this->dataPts)->getNPts()];
+  ctrs.getAssignments(closeCtr, sqDist);
+
+  vector < vectorPoint > cPoints(ctrs.getK(), vectorPoint((this->dataPts)->getNPts()));
+
+  for (int c=0;c<ctrs.getK(); c++) {
+    int p=0;
+    vectorPoint innerPoints; //((this->dataPts)->getNPts());
+    for (int i = 0; i < (this->dataPts)->getNPts(); i++) {
+      if (c==closeCtr[i]) {
+        clusterPoint cpoint;
+        cpoint.lat=dp[i][0];
+        cpoint.lng=dp[i][1];
+        innerPoints.push_back(cpoint);
+        p++;
+      }
+    }
+    cPoints[c]=innerPoints;
+    innerPoints.clear();
+  }
+
+  delete [] closeCtr;
+  delete [] sqDist;
+
+  return cPoints;
+
+}
+
 
 vector <clusterPoint> kmpoints::getPolygon() {
   KMdataArray dp = (this->dataPts)->getPts();

@@ -164,6 +164,45 @@ PHP_METHOD(kmpoints, getPolygons)
 
 }
 
+PHP_METHOD(kmpoints, getClusters)
+{
+  long nCenter;
+  kmpoints *kmp;
+  kmpoints_object *obj = (kmpoints_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+  kmp = obj->kmpoint;
+  vector < vectorPoint > retval;
+  char  cName[100];
+  zval	*theCluster;
+  zval  *thePoint;
+
+  if (kmp != NULL) {
+
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"l", &nCenter) == FAILURE) {
+          RETURN_NULL();
+      }
+
+      retval = kmp->getClusters((int)nCenter);
+
+      array_init(return_value);
+
+      for(int c=0;c<kmp->getHullNum();c++) {
+        ALLOC_INIT_ZVAL(theCluster);
+	array_init(theCluster);
+	sprintf(cName, "%d", c);
+        for (int i=0;i<retval[c].size();i++) {
+          ALLOC_INIT_ZVAL(thePoint);
+	  array_init(thePoint);
+	  add_next_index_double(thePoint, retval[c][i].lat);
+	  add_next_index_double(thePoint, retval[c][i].lng);
+	  add_next_index_zval(theCluster, thePoint);
+        }
+	add_assoc_zval(return_value, cName, theCluster);
+      }
+
+  }
+
+}
+
 PHP_METHOD(kmpoints, getPolygon)
 {
   kmpoints *kmp;
@@ -308,6 +347,7 @@ zend_function_entry kmpoints_methods[] = {
     PHP_ME(kmpoints,  getLat,           	NULL, ZEND_ACC_PUBLIC)
     PHP_ME(kmpoints,  newPoint,           	NULL, ZEND_ACC_PUBLIC)
     PHP_ME(kmpoints,  getPolygons, 		NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(kmpoints,  getClusters, 		NULL, ZEND_ACC_PUBLIC)
     PHP_ME(kmpoints,  getPolygon, 		NULL, ZEND_ACC_PUBLIC)
     PHP_ME(kmpoints,  getCircle, 		NULL, ZEND_ACC_PUBLIC)
     PHP_ME(kmpoints,  getNumPts, 		NULL, ZEND_ACC_PUBLIC)

@@ -32,3 +32,8 @@ print "Using kmeans with $CENTERS centers (approx formula: square root of half t
 $hullRes = $k->getPolygons($CENTERS);
 print_r($hullRes);
 
+print "The array of clusters of all the points:\n";
+print "Using kmeans with $CENTERS centers (approx formula: square root of half total points)\n";
+$theClusters = $k->getClusters($CENTERS);
+print_r($theClusters);
+
