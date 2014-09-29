@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <vector>
 #include "Miniball.hpp"
+#include "mercator.h"
 
 #define RESOLUTION 0.1
 #define R 6371.0
@@ -332,8 +333,8 @@ circlePoint kmpoints::getCircle() {
   KMdataArray dp = (this->dataPts)->getPts();
   for (int i=0;i<this->getNumPts();i++) {
     vector <KMcoord> p(2);
-    p[0]=dp[i][0];
-    p[1]=dp[i][1];
+    p[0]=lat2y_m(dp[i][0]);
+    p[1]=lon2x_m(dp[i][1]);
     lp.push_back(p);
   }
 
@@ -341,9 +342,11 @@ circlePoint kmpoints::getCircle() {
 
   const KMcoord *Ccenter = mb.center();
   circlePoint retVal;
-  retVal.lat=Ccenter[0];
-  retVal.lng=Ccenter[1];
+  retVal.lat=y2lat_m(Ccenter[0]);
+  retVal.lng=x2lon_m(Ccenter[1]);
   retVal.radius=sqrt(mb.squared_radius());
+  // retVal.radius=mb.squared_radius();
+
   if (retVal.radius<RESOLUTION) retVal.radius=0;
 
   return retVal;
