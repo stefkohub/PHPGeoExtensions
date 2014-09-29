@@ -36,7 +36,7 @@ Get the polygon (convex hull):
 print_r($k->getPolygon());
 ```
 
-Get an array of convex hull obtained from a first kmeans clustering pass:
+Get an array of convex hull obtained from a first kmeans clustering step:
 
 ```PHP
 $theKparameter=1;
