@@ -31,9 +31,3 @@
 #define lat2y_m(lat) (earth_radius * log(tan(M_PI/4+ deg2rad(lat)/2)))
 #define lon2x_m(lon) (deg2rad(lon) * earth_radius)
 
-#define y2lat_m(y) (rad2deg(2 * atan(exp( (y / earth_radius ) )) - M_PI/2))
-#define x2lon_m(x) (rad2deg(x / earth_radius))
-#define rlat2y_m(lat) (earth_radius * log(tan(M_PI/4+ lat/2)))
-#define rlon2x_m(lon) (lon * earth_radius)
-
-
