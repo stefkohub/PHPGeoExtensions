@@ -3,6 +3,7 @@
 #include <vector>
 #include "Miniball.hpp"
 #include "mercator.h"
+#include "clipper.hpp"
 
 #define RESOLUTION 0.1
 #define R 6371.0
@@ -289,7 +290,7 @@ vector < vectorPoint > kmpoints::getClusters(int k) {
 
 }
 
-
+#ifdef NOCLIPPER
 vector <clusterPoint> kmpoints::getPolygon() {
   KMdataArray dp = (this->dataPts)->getPts();
 
@@ -314,7 +315,68 @@ vector <clusterPoint> kmpoints::getPolygon() {
   return cPoints;
 
 }
+#else 
 
+vector <clusterPoint> kmpoints::getPolygon() {
+  return getPolygon(0.0);
+}
+
+vector <clusterPoint> kmpoints::_expandPolygon(vector <clusterPoint> CH, float delta) {
+    ClipperLib::Path subj;
+    ClipperLib::Paths solution;
+
+    for (int i = 0; i < CH.size(); i++) {
+      subj << ClipperLib::IntPoint(floorf(lat2y_m(CH[i].lat)), floorf(lon2x_m(CH[i].lng)));
+    }
+    ClipperLib::ClipperOffset co;
+    co.AddPath(subj, ClipperLib::jtMiter, ClipperLib::etClosedPolygon);
+    co.Execute(solution, delta);
+
+    vector <clusterPoint> oCH;
+
+    for(std::vector<int>::size_type j = 0; j != solution[0].size(); j++) {
+      clusterPoint cpoint;
+      cpoint.lat=(y2lat_m(solution[0][j].X));
+      cpoint.lng=(x2lon_m(solution[0][j].Y));
+      oCH.push_back(cpoint);
+    }  
+    return oCH;
+}
+
+vector <clusterPoint> kmpoints::getPolygon(float delta) {
+
+  KMdataArray dp = (this->dataPts)->getPts();
+
+  vector <clusterPoint> cPoints(vectorPoint((this->dataPts)->getNPts()));
+
+  vectorPoint innerPoints;
+  for (int i = 0; i < (this->dataPts)->getNPts(); i++) {
+    clusterPoint cpoint;
+    cpoint.lat=dp[i][0];
+    cpoint.lng=dp[i][1];
+    innerPoints.push_back(cpoint);
+  }
+  center = getCenterPoint(dp, (this->dataPts)->getNPts());
+  std::sort(innerPoints.begin(), innerPoints.end(), coordinateOrder);
+  cPoints=innerPoints;
+
+  vector <clusterPoint> CH;
+  CH=convex_hull(cPoints);
+  if (delta) {
+    cPoints=_expandPolygon(CH, delta);
+  } else {
+    cPoints=CH;
+  }
+
+  this->hullNum=1;
+
+  return cPoints;
+
+}
+#endif
+
+
+#ifdef VECTOR
 circlePoint kmpoints::getCircle() {
   //vector <clusterPoint> cPoints;
 
@@ -349,8 +411,86 @@ circlePoint kmpoints::getCircle() {
 
   if (retVal.radius<RESOLUTION) retVal.radius=0;
 
+  // number of support points
+  *kmOut << "Number of support points:\n  ";
+  *kmOut << mb.nr_support_points() << endl;
+
+  // support points on the boundary determine the smallest enclosing ball
+  *kmOut << "Support point indices (numbers refer to the input order):\n  ";
+  MB::SupportPointIterator it = mb.support_points_begin();
+  PointIterator first = lp.begin();
+  for (; it != mb.support_points_end(); ++it) {
+    *kmOut << distance(first, *it) << " "; // 0 = first point
+  }
+  *kmOut << endl;
+  
+  // relative error: by how much does the ball fail to contain all points? 
+  //                 tiny positive numbers come from roundoff and are ok
+  *kmOut << "Relative error:\n  ";
+  KMcoord suboptimality;
+  *kmOut << mb.relative_error (suboptimality) <<  endl;
+  
+  // suboptimality: by how much does the ball fail to be the smallest
+  //                enclosing ball of its support points? should be 0 
+  //                in most cases, but tiny positive numbers are again ok
+  *kmOut << "Suboptimality:\n  ";
+  *kmOut << suboptimality <<  endl;
+
+  // validity: the ball is considered valid if the relative error is tiny
+  //           (<= 10 times the machine epsilon) and the suboptimality is zero
+  *kmOut << "Validity:\n  ";
+  *kmOut << (mb.is_valid() ? "ok" : "possibly invalid") << endl;
+
+  // computation time
+  *kmOut << "Computation time was "<< mb.get_time() << " seconds\n";
+
+
+
   return retVal;
 }
+#else
+circlePoint kmpoints::getCircle() {
+  
+  *kmOut << "ALGORITMO SENZA ITERATOR" <<endl;
+
+  // generate random points and store them in a 2-d array
+  // ----------------------------------------------------
+  int n = this->getNumPts();
+  KMcoord** ap = new KMcoord*[n];
+  
+  KMdataArray dp = (this->dataPts)->getPts();
+  for (int i=0; i<n; ++i) {
+    KMcoord* p = new KMcoord[2];
+    p[0]=lat2y_m(dp[i][0]);
+    p[1]=lon2x_m(dp[i][1]);
+    ap[i]=p;
+  }
+
+  // define the types of iterators through the points and their coordinates
+  // ----------------------------------------------------------------------
+  typedef KMcoord* const* PointIterator; 
+  typedef const KMcoord* CoordIterator;
+
+  // create an instance of Miniball
+  // ------------------------------
+  typedef Miniball::
+    Miniball <Miniball::CoordAccessor<PointIterator, CoordIterator> > 
+    MB;
+  MB mb (2, ap, ap+n);
+  
+  // output results
+  // --------------
+  // center
+  const KMcoord* center = mb.center(); 
+
+  circlePoint retVal;
+  retVal.lat=y2lat_m(center[0]);
+  retVal.lng=x2lon_m(center[1]);
+  retVal.radius=sqrt(mb.squared_radius());
+  return retVal;
+}
+
+#endif
 
 int kmpoints::getNumIntersects(double lat, double lng, double criteria) {
   KMdataArray dp = (this->dataPts)->getPts();

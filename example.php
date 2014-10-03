@@ -1,6 +1,8 @@
 <?php
 
-include "minbound-altro.inc";
+// include "minbound-altro.inc";
+include "sassari.inc";
+// include "polyexample.inc";
 
 $MAXP=count($OrigPoints);
 $CENTERS=(int)sqrt($MAXP/2);
@@ -11,6 +13,8 @@ for ($n=0;$n<$MAXP;$n++) {
   // 		latitude, longitude, point id 
   $k->newPoint($OrigPoints[$n][0],$OrigPoints[$n][1],$n);
 }
+
+print "Using $MAXP points\n";
 
 print "The minimum circle containing all the points is: \n";
 print_r($k->getCircle());
@@ -24,8 +28,12 @@ print "Array of IDs intersecating: \n";
 print_r($k->getIdIntersects($lat, $lng, 5));
 
 print "The polygon (convex hull) containing all the points:\n";
-$hullRes = $k->getPolygon();
-print_r($hullRes);
+$hullRes = $k->getPolygon(5000);
+print "poly =[\n";
+foreach ($hullRes as $vertex) {
+  print "      new google.maps.LatLng(".$vertex[0].",".$vertex[1]."),\n";
+}
+print "];\n";
 
 print "The array of polygons (convex hull) containing all the points:\n";
 print "Using kmeans with $CENTERS centers (approx formula: square root of half total points)\n";

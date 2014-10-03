@@ -35,6 +35,7 @@ public:
     vector < vectorPoint > getPolygons(int);
     vector < vectorPoint > getClusters(int);
     vector <clusterPoint> getPolygon();
+    vector <clusterPoint> getPolygon(float);
     circlePoint getCircle();
     int getNumPts();
     int getHullNum();
@@ -50,6 +51,7 @@ private:
     int theDim;
     int maxPoints;
     int hullNum;
+    vector <clusterPoint> _expandPolygon(vector <clusterPoint>, float);
 };
 
 #endif /* KMLOCAL_POINTS_H */

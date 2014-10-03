@@ -211,10 +211,16 @@ PHP_METHOD(kmpoints, getPolygon)
   vector < clusterPoint > retval;
   zval	*theHull;
   zval  *thePoint;
+  double delta=0.0;
 
   if (kmp != NULL) {
 
-      retval = kmp->getPolygon();
+      if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, (char*)"|d", &delta) == FAILURE) {
+          RETURN_NULL();
+      }
+
+      retval = kmp->getPolygon(delta);
+
       array_init(return_value);
 
         ALLOC_INIT_ZVAL(theHull);
