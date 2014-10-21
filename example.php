@@ -1,8 +1,6 @@
 <?php
 
-// include "minbound-altro.inc";
-include "sassari.inc";
-// include "polyexample.inc";
+include "minbound-altro.inc";
 
 $MAXP=count($OrigPoints);
 $CENTERS=(int)sqrt($MAXP/2);
