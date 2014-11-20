@@ -1,6 +1,7 @@
 #include "php_geoextensions.h"
 // #include "KMlocal.h"
 #include "kmpoints.h"
+#include "kmpoints_errorcode.h"
 
 #include <map>
 
@@ -12,6 +13,40 @@ struct kmpoints_object {
     zend_object std;
     kmpoints *kmpoint;
 };
+
+typedef vector < clusterPoint > vectorClusterPoint;
+
+// void _return_error(zval *return_value, char* msg, long errc, zval *offp)
+void _return_error(zval *return_value, char* msg, long errc, kmpoints *pts)
+{
+   zval *theError;
+   zval *offpArray;
+   zval *thePoint;
+   vectorClusterPoint offp;
+
+   offp=pts->getOffendingPts();
+
+        ALLOC_INIT_ZVAL(theError);
+        array_init(theError);
+        add_assoc_string(theError, "Message", msg,1);
+        add_assoc_long(theError, "Code", errc);
+        /*if (offp.empty()) {
+          add_assoc_null(theError, "OffendingPoints");
+        } else {*/
+        if (!offp.empty()) {
+           ALLOC_INIT_ZVAL(offpArray);
+           array_init(offpArray);
+           for (int i=0;i<offp.size();i++) {
+             ALLOC_INIT_ZVAL(thePoint);
+             array_init(thePoint);
+             add_next_index_double(thePoint, offp[i].lat);
+             add_next_index_double(thePoint, offp[i].lng);
+             add_next_index_zval(offpArray, thePoint);
+           }
+           add_assoc_zval(theError, "OffendingPoints", offpArray);
+        }
+        add_assoc_zval(return_value, "Error", theError);
+}
 
 void kmpoints_free_storage(void *object TSRMLS_DC)
 {
@@ -209,7 +244,6 @@ PHP_METHOD(kmpoints, getPolygon)
   kmpoints_object *obj = (kmpoints_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
   kmp = obj->kmpoint;
   vector < clusterPoint > retval;
-  zval	*theHull;
   zval  *thePoint;
   double delta=0.0;
 
@@ -219,22 +253,24 @@ PHP_METHOD(kmpoints, getPolygon)
           RETURN_NULL();
       }
 
-      retval = kmp->getPolygon(delta);
-
       array_init(return_value);
 
-        ALLOC_INIT_ZVAL(theHull);
-	array_init(theHull);
-        for (int i=0;i<retval.size();i++) {
-          ALLOC_INIT_ZVAL(thePoint);
-          // php_printf("Hull (%d): (%f,%f)\n",i,retval[i].lat,retval[i].lng);
-	  array_init(thePoint);
-	  add_next_index_double(thePoint, retval[i].lat);
-	  add_next_index_double(thePoint, retval[i].lng);
-	  // add_next_index_zval(theHull, thePoint);
-	  add_next_index_zval(return_value, thePoint);
-        }
-	//add_assoc_zval(return_value, "hull", theHull);
+      if (kmp->getNumPts()<3) {
+        _return_error(return_value, (char*)"Too few points", ERRC_TOO_FEW_POINTS, kmp);
+      } else {
+        retval = kmp->getPolygon(delta);
+	if (retval.size()==0) {
+	  _return_error(return_value, (char*)"No solutions", ERRC_NO_POLY_SOLUTIONS, kmp);
+	} else {
+          for (int i=0;i<retval.size();i++) {
+            ALLOC_INIT_ZVAL(thePoint);
+            array_init(thePoint);
+            add_next_index_double(thePoint, retval[i].lat);
+            add_next_index_double(thePoint, retval[i].lng);
+            add_next_index_zval(return_value, thePoint);
+          }
+	}
+      }
 
   }
 

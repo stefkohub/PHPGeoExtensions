@@ -163,7 +163,7 @@ kmpoints::kmpoints(int maxPoints) {
   term.setAbsMaxTotStage(200);
   // KMdata dp(this->theDim, this->maxPoints);
   this->dataPts = new KMdata(this->theDim, this->maxPoints);
-  this->dataPtsID = (int*)calloc(this->maxPoints, sizeof(int));
+  this->dataPtsID = (long*)calloc(this->maxPoints, sizeof(int));
   //this->dataPtsPtr=&dp;
   this->nPts=0;
   this->hullNum=0;
@@ -331,15 +331,16 @@ vector <clusterPoint> kmpoints::_expandPolygon(vector <clusterPoint> CH, float d
     ClipperLib::ClipperOffset co;
     co.AddPath(subj, ClipperLib::jtMiter, ClipperLib::etClosedPolygon);
     co.Execute(solution, delta);
-
     vector <clusterPoint> oCH;
 
-    for(std::vector<int>::size_type j = 0; j != solution[0].size(); j++) {
-      clusterPoint cpoint;
-      cpoint.lat=(y2lat_m(solution[0][j].X));
-      cpoint.lng=(x2lon_m(solution[0][j].Y));
-      oCH.push_back(cpoint);
-    }  
+    if (!solution.empty()) {
+      for(std::vector<int>::size_type j = 0; j != solution[0].size(); j++) {
+        clusterPoint cpoint;
+        cpoint.lat=(y2lat_m(solution[0][j].X));
+        cpoint.lng=(x2lon_m(solution[0][j].Y));
+        oCH.push_back(cpoint);
+      }  
+    } 
     return oCH;
 }
 
@@ -516,6 +517,13 @@ vector <int> kmpoints::getIdIntersects(double lat, double lng, double criteria) 
       theIntersects.push_back(this->dataPtsID[i]);
   }
   return theIntersects;
+}
+
+vector <clusterPoint> kmpoints::getOffendingPts() {
+  vector <clusterPoint> oPts;
+  return oPts;
+  // KMdataArray dp = (this->dataPts)->getPts();
+  // return (this->dataPts)->getoPts();
 }
 
 

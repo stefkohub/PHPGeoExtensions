@@ -42,12 +42,14 @@ public:
     int getNumIntersects(double, double, double);
     int getNumIntersectsv2(double, double, double);
     vector <int> getIdIntersects(double, double, double);
+    vector <clusterPoint> getOffendingPts();
+
 private:
     //KMcoord lat;
     //KMcoord lng;
     int nPts;
     KMdata *dataPts;
-    int *dataPtsID;
+    long *dataPtsID;
     int theDim;
     int maxPoints;
     int hullNum;
