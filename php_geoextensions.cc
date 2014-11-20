@@ -150,7 +150,7 @@ PHP_METHOD(kmpoints, newPoint)
     if (uid==-1) {
       kmp->newPoint(lat, lng);
     } else {
-      kmp->newPoint(lat, lng, uid);
+      kmp->newPoint(lat, lng, (long)uid);
     }
     RETURN_NULL();
   }

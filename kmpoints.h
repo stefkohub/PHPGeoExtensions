@@ -29,7 +29,7 @@ class kmpoints {
 public:
     kmpoints(int maxPoints);
     void newPoint(double lat, double lng);
-    void newPoint(double lat, double lng, int id);
+    void newPoint(double lat, double lng, long id);
     KMcoord getLat(int);
     KMcoord getLng(int);
     vector < vectorPoint > getPolygons(int);

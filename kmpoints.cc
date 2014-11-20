@@ -114,6 +114,17 @@ static inline double equirectangularApproxDist(KMpoint pa, KMpoint pb)
 
 }
 
+static inline double mercatorDistance(double alat, double alng, double blat, double blng)
+{
+  double d1, d2;
+
+  d1=(lat2y_m(alat)-lat2y_m(blat))*(lat2y_m(alat)-lat2y_m(blat));
+  d2=(lon2x_m(alng)-lon2x_m(blng))*(lon2x_m(alng)-lon2x_m(blng));
+  // printf("Distance squared: %f\n",d1+d2);
+  return d1+d2;
+
+}
+
 // LINEAR VERSION
 static inline double cosinesLaw(double alat, double alng, double blat, double blng)
 {
@@ -163,13 +174,13 @@ kmpoints::kmpoints(int maxPoints) {
   term.setAbsMaxTotStage(200);
   // KMdata dp(this->theDim, this->maxPoints);
   this->dataPts = new KMdata(this->theDim, this->maxPoints);
-  this->dataPtsID = (long*)calloc(this->maxPoints, sizeof(int));
+  this->dataPtsID = (long*)calloc(this->maxPoints, sizeof(long));
   //this->dataPtsPtr=&dp;
   this->nPts=0;
   this->hullNum=0;
 }
 
-void kmpoints::newPoint(double lat, double lng, int id) {
+void kmpoints::newPoint(double lat, double lng, long id) {
   KMpointArray pa = (this->dataPts)->getPts();
   pa[this->nPts][0] = (KMcoord) lat;
   pa[this->nPts][1] = (KMcoord) lng;
@@ -376,7 +387,6 @@ vector <clusterPoint> kmpoints::getPolygon(float delta) {
 }
 #endif
 
-
 #ifdef VECTOR
 circlePoint kmpoints::getCircle() {
   //vector <clusterPoint> cPoints;
@@ -458,8 +468,10 @@ circlePoint kmpoints::getCircle() {
   // ----------------------------------------------------
   int n = this->getNumPts();
   KMcoord** ap = new KMcoord*[n];
+*kmOut << "QUI CI ARRIVO???\n\n" <<endl;
   
   KMdataArray dp = (this->dataPts)->getPts();
+
   for (int i=0; i<n; ++i) {
     KMcoord* p = new KMcoord[2];
     p[0]=lat2y_m(dp[i][0]);
@@ -512,8 +524,9 @@ vector <int> kmpoints::getIdIntersects(double lat, double lng, double criteria) 
   thePoint[0]=(KMcoord)lat;
   thePoint[1]=(KMcoord)lng;
 
-  for (int i=0;i<this->getNumPts();i++) {
-    if (cosinesLaw(dp[i],thePoint)<=criteria)
+  for (long i=0;i<this->getNumPts();i++) {
+    // if (cosinesLaw(dp[i],thePoint)<=criteria)
+    if (cosinesLaw(dp[i][0],dp[i][1],lat,lng)<=criteria)
       theIntersects.push_back(this->dataPtsID[i]);
   }
   return theIntersects;
