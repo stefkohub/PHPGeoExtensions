@@ -43,3 +43,11 @@ $theKparameter=1;
 print_r($k->getPolygons($theKparameter));
 ```
 
+Credits
+================
+
+Miniball: http://www.inf.ethz.ch/personal/gaertner/miniball.html
+KMLocal: http://www.cs.umd.edu/~mount/Projects/KMeans/
+Clipperlib: http://www.angusj.com/delphi/clipper.php
+Mercator Transformations: http://wiki.openstreetmap.org/wiki/Mercator#Spherical_Mercator
+
