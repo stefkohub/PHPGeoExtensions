@@ -462,13 +462,12 @@ circlePoint kmpoints::getCircle() {
 #else
 circlePoint kmpoints::getCircle() {
   
-  *kmOut << "ALGORITMO SENZA ITERATOR" <<endl;
+  // *kmOut << "ALGORITMO SENZA ITERATOR" <<endl;
 
   // generate random points and store them in a 2-d array
   // ----------------------------------------------------
   int n = this->getNumPts();
   KMcoord** ap = new KMcoord*[n];
-*kmOut << "QUI CI ARRIVO???\n\n" <<endl;
   
   KMdataArray dp = (this->dataPts)->getPts();
 
