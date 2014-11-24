@@ -23,6 +23,7 @@ typedef struct _circlePoint {
 } circlePoint;
 
 typedef std::vector<clusterPoint> vectorPoint;
+typedef std::vector<double> vectorDistance;
 
 
 class kmpoints {
@@ -41,8 +42,10 @@ public:
     int getHullNum();
     int getNumIntersects(double, double, double);
     int getNumIntersectsv2(double, double, double);
-    vector <int> getIdIntersects(double, double, double);
+    vector <long> getIdIntersects(double, double, double);
     vector <clusterPoint> getOffendingPts();
+    KMdataArray getDataPts();
+    vector <vectorDistance> dMatrix;
 
 private:
     //KMcoord lat;
@@ -54,6 +57,7 @@ private:
     int maxPoints;
     int hullNum;
     vector <clusterPoint> _expandPolygon(vector <clusterPoint>, float);
+    void createDistanceMatrix();
 };
 
 #endif /* KMLOCAL_POINTS_H */

@@ -360,7 +360,7 @@ PHP_METHOD(kmpoints, getIdIntersects)
   double lat;
   double lng;
   double radius;
-  vector <int> retval;
+  vector <long> retval;
 
   if (kmp != NULL) {
 

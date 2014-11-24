@@ -515,16 +515,15 @@ int kmpoints::getNumIntersects(double lat, double lng, double criteria) {
   return nIntersects;
 }
 
-vector <int> kmpoints::getIdIntersects(double lat, double lng, double criteria) {
+vector <long> kmpoints::getIdIntersects(double lat, double lng, double criteria) {
   KMdataArray dp = (this->dataPts)->getPts();
   KMpoint thePoint = kmAllocPt(2);
-  vector <int> theIntersects;
+  vector <long> theIntersects;
 
   thePoint[0]=(KMcoord)lat;
   thePoint[1]=(KMcoord)lng;
 
-  for (long i=0;i<this->getNumPts();i++) {
-    // if (cosinesLaw(dp[i],thePoint)<=criteria)
+  for (int i=0;i<this->getNumPts();i++) {
     if (cosinesLaw(dp[i][0],dp[i][1],lat,lng)<=criteria)
       theIntersects.push_back(this->dataPtsID[i]);
   }
@@ -546,3 +545,20 @@ int kmpoints::getNumPts() {
 int kmpoints::getHullNum() {
   return this->hullNum;
 }
+
+KMdataArray kmpoints::getDataPts() {
+  return (this->dataPts)->getPts();
+}
+
+void kmpoints::createDistanceMatrix() {
+  KMdataArray dp = this->getDataPts();
+  // vector< vectorDistance > myvec(this->getNumPts(), vectorDistance(this->getNumPts()));
+  this->dMatrix.resize(this->getNumPts(), vectorDistance(this->getNumPts()));
+
+  for (int i=0;i<this->getNumPts();i++) {
+    for (int j=i+1;j<this->getNumPts();j++) {
+      this->dMatrix[i][j]=cosinesLaw(dp[i][0],dp[i][1],dp[j][0],dp[j][1]);
+    }
+  }
+}
+
