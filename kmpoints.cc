@@ -389,7 +389,6 @@ vector <clusterPoint> kmpoints::getPolygon(float delta) {
 
 #ifdef VECTOR
 circlePoint kmpoints::getCircle() {
-  //vector <clusterPoint> cPoints;
 
   list<vector<KMcoord> > lp;
   // define the types of iterators through the points and their coordinates

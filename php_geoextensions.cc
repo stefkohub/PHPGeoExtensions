@@ -16,7 +16,6 @@ struct kmpoints_object {
 
 typedef vector < clusterPoint > vectorClusterPoint;
 
-// void _return_error(zval *return_value, char* msg, long errc, zval *offp)
 void _return_error(zval *return_value, char* msg, long errc, kmpoints *pts)
 {
    zval *theError;
@@ -286,19 +285,23 @@ PHP_METHOD(kmpoints, getCircle)
   zval  *theRadius;
 
   if (kmp != NULL) {
+    array_init(return_value);
 
+    if (kmp->getNumPts()<3) {
+      _return_error(return_value, (char*)"Too few points", ERRC_TOO_FEW_POINTS, kmp);
+    } else {
       retval = kmp->getCircle();
-      array_init(return_value);
 
-        ALLOC_INIT_ZVAL(theCenter);
-	array_init(theCenter);
-        add_next_index_double(theCenter, retval.lat);
-        add_next_index_double(theCenter, retval.lng);
-	add_assoc_zval(return_value, "center", theCenter);
-        ALLOC_INIT_ZVAL(theRadius);
-        array_init(theRadius);
-	add_next_index_double(theRadius, retval.radius);
-	add_assoc_zval(return_value, "radius", theRadius);
+      ALLOC_INIT_ZVAL(theCenter);
+      array_init(theCenter);
+      add_next_index_double(theCenter, retval.lat);
+      add_next_index_double(theCenter, retval.lng);
+      add_assoc_zval(return_value, "center", theCenter);
+      ALLOC_INIT_ZVAL(theRadius);
+      array_init(theRadius);
+      add_next_index_double(theRadius, retval.radius);
+      add_assoc_zval(return_value, "radius", theRadius);
+    }
 
   }
 
