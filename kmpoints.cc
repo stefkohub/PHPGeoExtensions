@@ -34,6 +34,14 @@ clusterPoint getCenterPoint(KMdataArray pts, int pointNum) {
   return thecenter;
 }
 
+// 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+// Returns a positive value, if OAB makes a counter-clockwise turn,
+// negative for clockwise turn, and zero if the points are collinear.
+static inline double cross(const clusterPoint &O, const clusterPoint &A, const clusterPoint &B)
+{
+	return (A.lat - O.lat) * (B.lng - O.lng) - (A.lng - O.lng) * (B.lat - O.lat);
+}
+
 bool coordinateOrder(const clusterPoint &a, const clusterPoint &b)
 {
     if (a.lat - center.lat >= 0 && b.lat - center.lat < 0)
@@ -47,7 +55,8 @@ bool coordinateOrder(const clusterPoint &a, const clusterPoint &b)
     }
 
     // compute the cross product of vectors (center -> a) x (center -> b)
-    int det = (a.lat - center.lat) * (b.lng - center.lng) - (b.lat - center.lat) * (a.lng - center.lng);
+    // int det = (a.lat - center.lat) * (b.lng - center.lng) - (b.lat - center.lat) * (a.lng - center.lng);
+    int det = cross(center,a,b);
     if (det < 0)
         return true;
     if (det > 0)
@@ -58,14 +67,6 @@ bool coordinateOrder(const clusterPoint &a, const clusterPoint &b)
     int d1 = (a.lat - center.lat) * (a.lat - center.lat) + (a.lng - center.lng) * (a.lng - center.lng);
     int d2 = (b.lat - center.lat) * (b.lat - center.lat) + (b.lng - center.lng) * (b.lng - center.lng);
     return d1 > d2;
-}
-
-// 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
-// Returns a positive value, if OAB makes a counter-clockwise turn,
-// negative for clockwise turn, and zero if the points are collinear.
-double cross(const clusterPoint &O, const clusterPoint &A, const clusterPoint &B)
-{
-	return (A.lat - O.lat) * (B.lng - O.lng) - (A.lng - O.lng) * (B.lat - O.lat);
 }
 
 // Returns a list of points on the convex hull in counter-clockwise order.
@@ -94,33 +95,12 @@ vector<clusterPoint> convex_hull(vector<clusterPoint> P)
 	return H;
 }
 
-static inline double equirectangularApproxDist(KMpoint pa, KMpoint pb)
-{
-    KMpoint a = kmAllocPt(2);
-    KMpoint b = kmAllocPt(2);
-    a[0]=pa[0]/(180.0*PI);
-    a[1]=pa[1]/(180.0*PI);
-    b[0]=pb[0]/(180.0*PI);
-    b[1]=pb[1]/(180.0*PI);
-
-    double x = b[1]-a[1]*cos((a[0]+b[0])/2);
-    double y = b[0]-a[0];
-    // returning square distance
-    double dist=R2*((x*x)+(y*y));
-    if (dist<RESOLUTION)
-      return 0.0;
-    else
-      return dist;
-
-}
-
 static inline double mercatorDistance(double alat, double alng, double blat, double blng)
 {
   double d1, d2;
 
   d1=(lat2y_m(alat)-lat2y_m(blat))*(lat2y_m(alat)-lat2y_m(blat));
   d2=(lon2x_m(alng)-lon2x_m(blng))*(lon2x_m(alng)-lon2x_m(blng));
-  // printf("Distance squared: %f\n",d1+d2);
   return d1+d2;
 
 }
@@ -147,7 +127,6 @@ static inline double cosinesLaw(KMpoint a, KMpoint b)
     d2=(a[1] - b[1])/180.0*PI*R; //bisognerebbe correggere il raggio terrestre alla data[0]itudine
     if (d2<0.0)
       d2=-d2;
-    //printf("d1 e d2 tra %f,%f e %f,%f è: %f\n",a[0],a[1],b[0],b[1],d1,d2);
     return d1 > d2 ? d1 : d2;
 }
 
@@ -161,21 +140,17 @@ static inline double cosinesLaw(clusterPoint a, clusterPoint b)
     d2=(a.lng - b.lng)/180.0*PI*R; //bisognerebbe correggere il raggio terrestre alla data latitudine
     if (d2<0.0)
       d2=-d2;
-    //printf("d1 e d2 tra %f,%f e %f,%f è: %f\n",a.lat,a.lng,b.lat,b.lng,d1,d2);
     return d1 > d2 ? d1 : d2;
 }
 
 // Class functions
 
 kmpoints::kmpoints(int maxPoints) {
-  // KMdata dataPts(dim, nPts);
   this->theDim=2;
   this->maxPoints=maxPoints;
   term.setAbsMaxTotStage(200);
-  // KMdata dp(this->theDim, this->maxPoints);
   this->dataPts = new KMdata(this->theDim, this->maxPoints);
   this->dataPtsID = (long*)calloc(this->maxPoints, sizeof(long));
-  //this->dataPtsPtr=&dp;
   this->nPts=0;
   this->hullNum=0;
 }
@@ -209,6 +184,46 @@ KMcoord kmpoints::getLng(int index) {
   KMdataArray dp = (this->dataPts)->getPts();
   KMcoord c = dp[index][1];
   return c;
+}
+
+vector < vectorPoint > kmpoints::getClusters(int k) {
+  KMdataArray dp = (this->dataPts)->getPts();
+
+  (this->dataPts)->buildKcTree();
+  KMfilterCenters ctrs(k, *(this->dataPts));
+
+  // KMlocalLloyds       kmAlg(ctrs, term);
+  // ctrs = kmAlg.execute();
+  KMlocalHybrid Local_Hybrid(ctrs, term);   // EZ-Hybrid heuristic
+  ctrs = Local_Hybrid.execute();
+
+  KMctrIdxArray closeCtr = new KMctrIdx[(this->dataPts)->getNPts()];
+  double* sqDist = new double[(this->dataPts)->getNPts()];
+  ctrs.getAssignments(closeCtr, sqDist);
+
+  vector < vectorPoint > cPoints(ctrs.getK(), vectorPoint((this->dataPts)->getNPts()));
+
+  for (int c=0;c<ctrs.getK(); c++) {
+    int p=0;
+    vectorPoint innerPoints; //((this->dataPts)->getNPts());
+    for (int i = 0; i < (this->dataPts)->getNPts(); i++) {
+      if (c==closeCtr[i]) {
+        clusterPoint cpoint;
+        cpoint.lat=dp[i][0];
+        cpoint.lng=dp[i][1];
+        innerPoints.push_back(cpoint);
+        p++;
+      }
+    }
+    cPoints[c]=innerPoints;
+    innerPoints.clear();
+  }
+
+  delete [] closeCtr;
+  delete [] sqDist;
+
+  return cPoints;
+
 }
 
 vector < vectorPoint > kmpoints::getPolygons(int k) {
@@ -261,45 +276,6 @@ vector < vectorPoint > kmpoints::getPolygons(int k) {
 
 }
 
-vector < vectorPoint > kmpoints::getClusters(int k) {
-  KMdataArray dp = (this->dataPts)->getPts();
-
-  (this->dataPts)->buildKcTree();
-  KMfilterCenters ctrs(k, *(this->dataPts));
-
-  // KMlocalLloyds       kmAlg(ctrs, term);
-  // ctrs = kmAlg.execute();
-  KMlocalHybrid Local_Hybrid(ctrs, term);   // EZ-Hybrid heuristic
-  ctrs = Local_Hybrid.execute();
-
-  KMctrIdxArray closeCtr = new KMctrIdx[(this->dataPts)->getNPts()];
-  double* sqDist = new double[(this->dataPts)->getNPts()];
-  ctrs.getAssignments(closeCtr, sqDist);
-
-  vector < vectorPoint > cPoints(ctrs.getK(), vectorPoint((this->dataPts)->getNPts()));
-
-  for (int c=0;c<ctrs.getK(); c++) {
-    int p=0;
-    vectorPoint innerPoints; //((this->dataPts)->getNPts());
-    for (int i = 0; i < (this->dataPts)->getNPts(); i++) {
-      if (c==closeCtr[i]) {
-        clusterPoint cpoint;
-        cpoint.lat=dp[i][0];
-        cpoint.lng=dp[i][1];
-        innerPoints.push_back(cpoint);
-        p++;
-      }
-    }
-    cPoints[c]=innerPoints;
-    innerPoints.clear();
-  }
-
-  delete [] closeCtr;
-  delete [] sqDist;
-
-  return cPoints;
-
-}
 
 #ifdef NOCLIPPER
 vector <clusterPoint> kmpoints::getPolygon() {
@@ -461,8 +437,6 @@ circlePoint kmpoints::getCircle() {
 #else
 circlePoint kmpoints::getCircle() {
   
-  // *kmOut << "ALGORITMO SENZA ITERATOR" <<endl;
-
   // generate random points and store them in a 2-d array
   // ----------------------------------------------------
   int n = this->getNumPts();

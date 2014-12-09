@@ -173,26 +173,26 @@ PHP_METHOD(kmpoints, getPolygons)
           RETURN_NULL();
       }
 
-      // php_printf("nPts=%d\n",(int)nCenter);
-
-      retval = kmp->getPolygons((int)nCenter);
-
       array_init(return_value);
 
-      for(int c=0;c<kmp->getHullNum();c++) {
-        ALLOC_INIT_ZVAL(theHull);
-	array_init(theHull);
-	sprintf(hullName, "%d", c);
-        for (int i=0;i<retval[c].size();i++) {
-          ALLOC_INIT_ZVAL(thePoint);
-          // php_printf("Hull %d-%d: (%f,%f)\n",c,i,retval[c][i].lat,retval[c][i].lng);
-	  array_init(thePoint);
-	  add_next_index_double(thePoint, retval[c][i].lat);
-	  add_next_index_double(thePoint, retval[c][i].lng);
-	  add_next_index_zval(theHull, thePoint);
-        }
-	add_assoc_zval(return_value, hullName, theHull);
+      if (kmp->getNumPts()<3) {
+        _return_error(return_value, (char*)"Too few points", ERRC_TOO_FEW_POINTS, kmp);
+      } else {
+        retval = kmp->getPolygons((int)nCenter);
+        for(int c=0;c<kmp->getHullNum();c++) {
+          ALLOC_INIT_ZVAL(theHull);
+  	  array_init(theHull);
+	  sprintf(hullName, "%d", c);
+          for (int i=0;i<retval[c].size();i++) {
+            ALLOC_INIT_ZVAL(thePoint);
+	    array_init(thePoint);
+	    add_next_index_double(thePoint, retval[c][i].lat);
+	    add_next_index_double(thePoint, retval[c][i].lng);
+	    add_next_index_zval(theHull, thePoint);
+          }
+	  add_assoc_zval(return_value, hullName, theHull);
       }
+    }
 
   }
 
@@ -215,24 +215,26 @@ PHP_METHOD(kmpoints, getClusters)
           RETURN_NULL();
       }
 
-      retval = kmp->getClusters((int)nCenter);
-
       array_init(return_value);
 
-      for(int c=0;c<kmp->getHullNum();c++) {
-        ALLOC_INIT_ZVAL(theCluster);
-	array_init(theCluster);
-	sprintf(cName, "%d", c);
-        for (int i=0;i<retval[c].size();i++) {
-          ALLOC_INIT_ZVAL(thePoint);
-	  array_init(thePoint);
-	  add_next_index_double(thePoint, retval[c][i].lat);
-	  add_next_index_double(thePoint, retval[c][i].lng);
-	  add_next_index_zval(theCluster, thePoint);
+      if (kmp->getNumPts()<3) {
+        _return_error(return_value, (char*)"Too few points", ERRC_TOO_FEW_POINTS, kmp);
+      } else {
+        retval = kmp->getClusters((int)nCenter);
+        for(int c=0;c<kmp->getHullNum();c++) {
+          ALLOC_INIT_ZVAL(theCluster);
+	  array_init(theCluster);
+	  sprintf(cName, "%d", c);
+          for (int i=0;i<retval[c].size();i++) {
+            ALLOC_INIT_ZVAL(thePoint);
+	    array_init(thePoint);
+	    add_next_index_double(thePoint, retval[c][i].lat);
+	    add_next_index_double(thePoint, retval[c][i].lng);
+	    add_next_index_zval(theCluster, thePoint);
+          }
+	  add_assoc_zval(return_value, cName, theCluster);
         }
-	add_assoc_zval(return_value, cName, theCluster);
-      }
-
+    }
   }
 
 }
@@ -314,7 +316,9 @@ PHP_METHOD(kmpoints, getNumPts)
     kmpoints_object *obj = (kmpoints_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
     kmp = obj->kmpoint;
     if (kmp != NULL) {
-      RETURN_DOUBLE((kmp->getNumPts()));
+      RETURN_LONG((kmp->getNumPts()));
+    } else {
+      RETURN_LONG(-1);
     }
 
 }
@@ -327,6 +331,8 @@ PHP_METHOD(kmpoints, getHullNum)
     kmp = obj->kmpoint;
     if (kmp != NULL) {
       RETURN_LONG((kmp->getHullNum()));
+    } else {
+      RETURN_LONG(-1);
     }
 
 }

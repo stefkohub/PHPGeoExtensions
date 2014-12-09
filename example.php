@@ -1,7 +1,7 @@
 <?php
 
-// include "minbound-altro.inc";
-include "polyexample.inc";
+include "minbound-altro.inc";
+// include "polyexample.inc";
 
 $MAXP=count($OrigPoints);
 $CENTERS=(int)sqrt($MAXP/2);
@@ -28,8 +28,6 @@ print "Looking for intersections from center: $lat, $lng with radius ".$radius."
 print "Number of intersections: ".$k->getNumIntersects($lat, $lng, $radius)."\n";
 print "Array of IDs intersecating: \n";
 print_r($k->getIdIntersects($lat, $lng, $radius));
-
-die;
 
 print "The polygon (convex hull) containing all the points:\n";
 $hullRes = $k->getPolygon(5000);
