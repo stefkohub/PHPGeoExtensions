@@ -490,11 +490,7 @@ int kmpoints::getNumIntersects(double lat, double lng, double criteria) {
 
 vector <long> kmpoints::getIdIntersects(double lat, double lng, double criteria) {
   KMdataArray dp = (this->dataPts)->getPts();
-  KMpoint thePoint = kmAllocPt(2);
   vector <long> theIntersects;
-
-  thePoint[0]=(KMcoord)lat;
-  thePoint[1]=(KMcoord)lng;
 
   for (int i=0;i<this->getNumPts();i++) {
     if (cosinesLaw(dp[i][0],dp[i][1],lat,lng)<=criteria)
